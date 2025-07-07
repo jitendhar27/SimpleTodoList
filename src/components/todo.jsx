@@ -1,43 +1,34 @@
 import { useState, useEffect } from "react";
 
-export default function Todo() {
+export default function TodoList() {
   const [todos, setTodos] = useState(() => {
     const stored = localStorage.getItem("todos");
     return stored ? JSON.parse(stored) : [];
   });
 
   const [newTodo, setNewTodo] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
 
-  const addTodo = () => {
-    if (newTodo.trim() === "") return;
-    setTodos([...todos, { text: newTodo, completed: false }]);
-    setNewTodo("");
-  };
-
-  const removeTodo = (index) => {
-    setTodos(todos.filter((_, i) => i !== index));
-  };
-
-  const toggleComplete = (index) => {
-    setTodos(todos.map((todo, i) =>
-      i === index ? { ...todo, completed: !todo.completed } : todo
-    ));
-  };
-
-  const clearCompleted = () => {
-    setTodos(todos.filter((todo) => !todo.completed));
-  };
-
-  const totalTasks = todos.length;
-  const completedTasks = todos.filter((todo) => todo.completed).length;
+  const filteredTodos = todos.filter((todo) =>
+    filter === "Active" ? !todo.completed :
+    filter === "Completed" ? todo.completed :
+    true
+  );
 
   return (
-    <div className="App">
-      <h1>TODO List</h1>
+    <div className={`App ${darkMode ? "dark-mode" : ""}`}>
+      <h1>My Todo App</h1>
+
+      <button onClick={() => setDarkMode(!darkMode)}>
+        {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+      </button>
+
+      <h2>TODO List</h2>
 
       <div>
         <input
@@ -46,50 +37,69 @@ export default function Todo() {
           onChange={(e) => setNewTodo(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && newTodo.trim() !== "") {
-              addTodo();
+              setTodos([...todos, { text: newTodo, completed: false }]);
+              setNewTodo("");
             }
           }}
           placeholder="Enter task"
         />
 
-        <button onClick={addTodo} disabled={newTodo.trim() === ""}>
+        <button onClick={() => {
+          if (newTodo.trim() !== "") {
+            setTodos([...todos, { text: newTodo, completed: false }]);
+            setNewTodo("");
+          }
+        }} disabled={newTodo.trim() === ""}>
           Add
         </button>
       </div>
 
-      <div style={{ marginTop: "1rem" }}>
-        <p>Total Tasks: {totalTasks} | Completed: {completedTasks}</p>
-        <button onClick={clearCompleted} disabled={completedTasks === 0}>
-          Clear Completed
-        </button>
+      <p>Total: {todos.length} | Completed: {todos.filter(t => t.completed).length}</p>
+      <button onClick={() => setTodos(todos.filter(t => !t.completed))}
+        disabled={todos.filter(t => t.completed).length === 0}>
+        Clear Completed
+      </button>
+
+      <div>
+        {["All", "Active", "Completed"].map((f) => (
+          <button
+            key={f}
+            className={`filter-btn ${filter === f ? "active" : ""}`}
+            onClick={() => setFilter(f)}
+          >
+            {f}
+          </button>
+        ))}
       </div>
 
-      {todos.length === 0 ? (
-        <p>No tasks added yet.</p>
-      ) : (
-        <ul>
-          {todos.map((todo, index) => (
-            <li key={index}>
-              <div>
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  onChange={() => toggleComplete(index)}
-                />
-                <span
-                  style={{
-                    textDecoration: todo.completed ? "line-through" : "none",
-                    marginLeft: "10px",
-                  }}
-                >
-                  {todo.text}
-                </span>
-              </div>
-              <button onClick={() => removeTodo(index)}>Remove</button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {filteredTodos.map((todo, i) => (
+        <div className="task-item" key={i}>
+          <div>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() =>
+                setTodos(todos.map((t, j) =>
+                  j === i ? { ...t, completed: !t.completed } : t
+                ))
+              }
+            />
+            <span
+              style={{
+                textDecoration: todo.completed ? "line-through" : "none",
+                marginLeft: "10px",
+              }}
+            >
+              {todo.text}
+            </span>
+          </div>
+          <button className="remove-btn" onClick={() =>
+            setTodos(todos.filter((_, j) => j !== i))
+          }>
+            Remove
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
