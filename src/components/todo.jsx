@@ -1,8 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Todo() {
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    // Safe initialization from localStorage
+    const stored = localStorage.getItem("todos");
+    return stored ? JSON.parse(stored) : [];
+  });
+
   const [newTodo, setNewTodo] = useState("");
+
+  // Save to localStorage whenever todos change
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
 
   const addTodo = () => {
     if (newTodo.trim() === "") return;
@@ -11,15 +21,13 @@ export default function Todo() {
   };
 
   const removeTodo = (index) => {
-    const updatedTodos = todos.filter((_, i) => i !== index);
-    setTodos(updatedTodos);
+    setTodos(todos.filter((_, i) => i !== index));
   };
 
   const toggleComplete = (index) => {
-    const updatedTodos = todos.map((todo, i) =>
+    setTodos(todos.map((todo, i) =>
       i === index ? { ...todo, completed: !todo.completed } : todo
-    );
-    setTodos(updatedTodos);
+    ));
   };
 
   return (
