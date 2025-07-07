@@ -2,14 +2,12 @@ import { useState, useEffect } from "react";
 
 export default function Todo() {
   const [todos, setTodos] = useState(() => {
-    // Safe initialization from localStorage
     const stored = localStorage.getItem("todos");
     return stored ? JSON.parse(stored) : [];
   });
 
   const [newTodo, setNewTodo] = useState("");
 
-  // Save to localStorage whenever todos change
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
@@ -30,6 +28,13 @@ export default function Todo() {
     ));
   };
 
+  const clearCompleted = () => {
+    setTodos(todos.filter((todo) => !todo.completed));
+  };
+
+  const totalTasks = todos.length;
+  const completedTasks = todos.filter((todo) => todo.completed).length;
+
   return (
     <div className="App">
       <h1>TODO List</h1>
@@ -49,6 +54,13 @@ export default function Todo() {
 
         <button onClick={addTodo} disabled={newTodo.trim() === ""}>
           Add
+        </button>
+      </div>
+
+      <div style={{ marginTop: "1rem" }}>
+        <p>Total Tasks: {totalTasks} | Completed: {completedTasks}</p>
+        <button onClick={clearCompleted} disabled={completedTasks === 0}>
+          Clear Completed
         </button>
       </div>
 
